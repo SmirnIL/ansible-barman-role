@@ -1,9 +1,9 @@
 host: 'localhost'
 port: 5432
-user: 'postgres'
+user: 'barman'
 password: 'Cl0ud.R$'
 dbname: 'postgres'
-sshuser: 'user1'
+sshuser: 'postgres'
 barmanname: 'dbpostgres'
 endpoint: 'https://barman.obs.ru-moscow-1.hc.sbercloud.ru'
 ak: 'LGTH3GCXF2XQ8KY5YHVL'

@@ -103,5 +103,5 @@ log_level = INFO
 [{{ barmanname }}]
 description = "postgres backup"
 conninfo = host={{ host }} user={{ user }} password={{ password }} dbname={{ dbname }}
-ssh_command = ssh {{ user }}@{{ host }}
+ssh_command = ssh {{ sshuser }}@{{ host }}
 retention_policy = RECOVERY WINDOW OF 2 WEEKS

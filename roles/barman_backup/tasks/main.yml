@@ -15,27 +15,107 @@
     dest: "/etc/barman.conf"
   become: true
 
-- name: Install barman-cli-cloud
-  ansible.builtin.apt:
-    name: barman-cli-cloud
-    state: present
+- name: Generate .ssh dir for postgres user
+  ansible.builtin.file:
+    path: /var/lib/postgresql/.ssh
+    state: directory
+    mode: '0755'
+    owner: postgres
+    group: postgres
   become: true
 
-- name: Create dir .aws in barman account
+- name: Generate .ssh dir for barman user
   ansible.builtin.file:
-    path: /var/lib/barman/.aws
+    path: /var/lib/barman/.ssh
     state: directory
     mode: '0755'
     owner: barman
     group: barman
   become: true
 
+- name: Generate an SSH key pair for barman
+  openssh_keypair:
+    path: /var/lib/barman/.ssh/id_rsa
+    type: rsa
+    owner: barman
+    group: barman
+    mode: '0600'
+  become: true
+
+- name: Generate an SSH key pair for postgres
+  openssh_keypair:
+    path: /var/lib/postgresql/.ssh/id_rsa
+    type: rsa
+    owner: postgres
+    group: postgres
+    mode: '0600'
+  become: true
+
+- name: Create an empty authorized_keys file for barman
+  file:
+    path: /var/lib/barman/.ssh/authorized_keys
+    state: touch
+    owner: barman
+    group: barman
+    mode: '0600'
+  become: true
+
+- name: Create an empty authorized_keys file for postgres
+  file:
+    path: /var/lib/postgresql/.ssh/authorized_keys
+    state: touch
+    owner: postgres
+    group: postgres
+    mode: '0600'
+  become: true
+
+- name: get barman public key
+  command: "cat /var/lib/barman/.ssh/id_rsa.pub"
+  register: barman_key
+  become: true
+
+- name: get postgres public key
+  command: "cat /var/lib/postgresql/.ssh/id_rsa.pub"
+  register: postgres_key
+  become: true
+
+- name: Copy the public key to authorized_keys of postgres user
+  authorized_key:
+    user: postgres
+    state: present
+    key: "{{ barman_key.stdout }}"
+    path: /var/lib/postgresql/.ssh/authorized_keys
+  become: true
+
+- name: Copy the public key to authorized_keys of barman user
+  authorized_key:
+    user: barman
+    state: present
+    key: "{{ postgres_key.stdout }}"
+    path: /var/lib/barman/.ssh/authorized_keys
+  become: true
+
+- name: Install barman-cli-cloud
+  ansible.builtin.apt:
+    name: barman-cli-cloud
+    state: present
+  become: true
+
+- name: Create dir .aws in postgres account
+  ansible.builtin.file:
+    path: /var/lib/postgresql/.aws
+    state: directory
+    mode: '0755'
+    owner: postgres
+    group: postgres
+  become: true
+
 - name: Create credential file for .aws
   ansible.builtin.template:
     src: credentials.j2
-    dest: /var/lib/barman/.aws/credentials
-    owner: barman
-    group: barman
+    dest: /var/lib/postgresql/.aws/credentials
+    owner: postgres
+    group: postgresучш
     mode: '0640'
   become: true
 
@@ -44,6 +124,6 @@
     name: "Barman backup and upload to OBS"
     minute: "0"
     hour: "2"
-    job: "/usr/bin/barman backup {{ barmanname }} && /usr/bin/barman-cloud-backup --cloud-provider aws-s3 --endpoint-url {{ endpoint }} s3://{{ bucket }} {{ barmanname }}"
-    user: "barman"
+    job: "sudo -u barman /usr/bin/barman backup {{ barmanname }} && sudo -u postgres /usr/bin/barman-cloud-backup --cloud-provider aws-s3 --endpoint-url {{ endpoint }} s3://{{ bucket }} {{ barmanname }}"
+    user: "user1"
   become: true
