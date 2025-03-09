@@ -115,7 +115,7 @@
     src: credentials.j2
     dest: /var/lib/postgresql/.aws/credentials
     owner: postgres
-    group: postgresучш
+    group: postgres
     mode: '0640'
   become: true
 
