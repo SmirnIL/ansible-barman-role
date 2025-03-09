@@ -1,0 +1,49 @@
+
+# - name: Add Barman repository to OS
+#   ansible.builtin.apt_repository:
+#     repo: ppa:pgbarman/stable
+
+- name: Install barman
+  ansible.builtin.apt:
+    name: barman
+    state: present
+  become: true
+
+- name: copy upstart script
+  template: 
+    src: barman.conf.j2
+    dest: "/etc/barman.conf"
+  become: true
+
+- name: Install barman-cli-cloud
+  ansible.builtin.apt:
+    name: barman-cli-cloud
+    state: present
+  become: true
+
+- name: Create dir .aws in barman account
+  ansible.builtin.file:
+    path: /var/lib/barman/.aws
+    state: directory
+    mode: '0755'
+    owner: barman
+    group: barman
+  become: true
+
+- name: Create credential file for .aws
+  ansible.builtin.template:
+    src: credentials.j2
+    dest: /var/lib/barman/.aws/credentials
+    owner: barman
+    group: barman
+    mode: '0640'
+  become: true
+
+- name: Add barman backup and upload to cloud to cron
+  cron:
+    name: "Barman backup and upload to OBS"
+    minute: "0"
+    hour: "2"
+    job: "/usr/bin/barman backup {{ barmanname }} && /usr/bin/barman-cloud-backup --cloud-provider aws-s3 --endpoint-url {{ endpoint }} s3://{{ bucket }} {{ barmanname }}"
+    user: "barman"
+  become: true

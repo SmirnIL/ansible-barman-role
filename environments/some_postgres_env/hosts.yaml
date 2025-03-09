@@ -1,0 +1,6 @@
+all:
+  children:
+    postgres_servers:
+      hosts:
+        db01:
+          ansible_host: localhost

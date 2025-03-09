@@ -1,0 +1,12 @@
+host: 'localhost'
+port: 5432
+user: 'postgres'
+password: 'Cl0ud.R$'
+dbname: 'postgres'
+sshuser: 'user1'
+barmanname: 'dbpostgres'
+endpoint: 'https://barman.obs.ru-moscow-1.hc.sbercloud.ru'
+ak: 'LGTH3GCXF2XQ8KY5YHVL'
+sk: 'sx2rLiR6zDHQdWeyki29s5wxDPrURiysvFgozNns'
+region: 'ru-central-1'
+bucket: 'bucket-barman'
